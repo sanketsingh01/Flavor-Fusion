@@ -8,8 +8,8 @@ function Login({ setIsLoggedIn }) {
   const onSubmit = (data) => {
     if (data.email === "admin@example.com" && data.password === "password") {
       localStorage.setItem("token", "admin-token");
-      setIsLoggedIn(true); // this tells App.js to render sidebar
-      navigate("/", { replace: true }); // shift to homepage
+      setIsLoggedIn(true);
+      navigate("/", { replace: true });
     } else {
       alert("Invalid credentials");
     }
