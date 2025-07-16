@@ -97,7 +97,7 @@ const Hero = () => {
   //     </div>
   //   </>
   // );
-  const [currentIndex, stCurrentIendex] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(0);
 
   // Auto-scroll every 4s
   useEffect(() => {

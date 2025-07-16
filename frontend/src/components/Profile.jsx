@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Pencil,
   Lock,
@@ -8,27 +8,31 @@ import {
   UserCircle2,
   ShoppingBag,
 } from "lucide-react";
+import axios from "axios";
+import { toast } from "react-hot-toast";
+import { replace, useNavigate } from "react-router-dom";
 
 const Profile = () => {
+  const user = JSON.parse(localStorage.getItem("user"));
+  console.log("USer Data: ", user);
+
+  const navigate = useNavigate();
+
   const userData = {
-    name: "Sanket Singh",
-    email: "sanket@example.com",
-    photo: "images/client2.jpg",
-    phone: "+91 9876543210",
-    address: "123 Street, Mukerian, Punjab",
+    name: user.name,
+    email: user.email,
+    photo: user.imageUrl,
+    phone: user.phone,
+    address: user.address,
     about:
       "Passionate foodie and software engineer who loves exploring new tastes and building beautiful user experiences.",
-    createdAt: "2023-02-15",
+    createdAt: user.createdAt,
     loyaltyPoints: 240,
     social: {
       facebook: "https://facebook.com/sanket",
       instagram: "https://instagram.com/sanket",
     },
-    pastOrders: [
-      { id: 1, item: "Margherita Pizza", price: 8.99, date: "2025-07-01" },
-      { id: 2, item: "Pasta Alfredo", price: 9.49, date: "2025-06-28" },
-      { id: 3, item: "Veggie Burger", price: 5.99, date: "2025-06-22" },
-    ],
+    pastOrders: [],
   };
 
   const [activeTab, setActiveTab] = useState("profile");
@@ -37,21 +41,72 @@ const Profile = () => {
 
   const [formData, setFormData] = useState({
     name: userData.name,
+    email: userData.email,
     phone: userData.phone,
     address: userData.address,
+    imageUrl: userData.photo,
     about: userData.about,
   });
 
   const [newPassword, setNewPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState(null);
+  const [errorMessage, setErrorMessage] = useState(null);
 
-  const handleEditSave = () => {
-    console.log("Updated data", formData);
-    setShowEditModal(false);
+  const handleChnage = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const handleEditSave = async (e) => {
+    e.preventDefault();
+
+    const payload = {
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone,
+      address: formData.address,
+      imageUrl: formData.imageUrl,
+    };
+
+    try {
+      setSuccessMessage(null);
+      setErrorMessage(null);
+      setLoading(true);
+
+      const userId = user._id;
+      const response = await axios.put(
+        `http://localhost:3000/user/updateUser/${userId}`,
+        payload
+      );
+      localStorage.setItem("user", JSON.stringify(response.data.body));
+      console.log("Updated data: ", response.data);
+      setSuccessMessage(response.data.message || "User details updated!");
+    } catch (error) {
+      console.log("Error while updating: ", error);
+      setErrorMessage("Failed to updated user details");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (successMessage) {
+      toast.success(successMessage || "User updated Successfully");
+    }
+
+    if (errorMessage) {
+      toast.error(errorMessage || "failed to update the User");
+    }
+  }, [successMessage, errorMessage]);
   const handlePasswordSave = () => {
     console.log("New password", newPassword);
     setShowPasswordModal(false);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    navigate("/", { replace: true });
+    toast.success("User LoggedOut Successfully");
   };
 
   return (
@@ -139,7 +194,7 @@ const Profile = () => {
               <h5 className="fw-semibold mb-3">Account Information</h5>
               <div className="list-group list-group-flush mb-3">
                 <div className="list-group-item bg-transparent border-0">
-                  <strong>Name:</strong> {formData.name}
+                  <strong>UserName:</strong> {formData.name}
                 </div>
                 <div className="list-group-item bg-transparent border-0">
                   <strong>Email:</strong> {userData.email}
@@ -167,7 +222,10 @@ const Profile = () => {
                 >
                   <Lock size={16} /> Change Password
                 </button>
-                <button className="btn btn-danger d-flex align-items-center gap-1">
+                <button
+                  onClick={handleLogout}
+                  className="btn btn-danger d-flex align-items-center gap-1"
+                >
                   <LogOut size={16} /> Logout
                 </button>
               </div>
@@ -232,65 +290,112 @@ const Profile = () => {
               ></button>
             </div>
             <div className="modal-body">
-              <div className="mb-2">
-                <label className="form-label">Name</label>
-                <input
-                  value={formData.name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
-                  className="form-control"
-                />
-              </div>
-              <div className="mb-2">
-                <label className="form-label">Phone</label>
-                <input
-                  value={formData.phone}
-                  onChange={(e) =>
-                    setFormData({ ...formData, phone: e.target.value })
-                  }
-                  className="form-control"
-                />
-              </div>
-              <div className="mb-2">
-                <label className="form-label">Address</label>
-                <input
-                  value={formData.address}
-                  onChange={(e) =>
-                    setFormData({ ...formData, address: e.target.value })
-                  }
-                  className="form-control"
-                />
-              </div>
-              <div className="mb-2">
-                <label className="form-label">About</label>
-                <textarea
-                  value={formData.about}
-                  onChange={(e) =>
-                    setFormData({ ...formData, about: e.target.value })
-                  }
-                  className="form-control"
-                  rows="3"
-                />
-              </div>
-            </div>
-            <div className="modal-footer">
-              <button
-                className="btn btn-secondary"
-                onClick={() => setShowEditModal(false)}
-              >
-                Cancel
-              </button>
-              <button
-                className="btn"
-                onClick={handleEditSave}
-                style={{
-                  background: "#ffbe33",
-                  color: "#000000",
-                }}
-              >
-                Save Changes
-              </button>
+              <form onSubmit={handleEditSave}>
+                <div className="form-group mb-3">
+                  <label htmlFor="name" className="form-label">
+                    UserName
+                  </label>
+
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    className="form-control"
+                    value={formData.name}
+                    onChange={handleChnage}
+                  />
+                </div>
+                <div className="form-group mb-3">
+                  <label htmlFor="email" className="form-label">
+                    Email
+                  </label>
+
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    className="form-control"
+                    value={formData.email}
+                    onChange={handleChnage}
+                  />
+                </div>
+                <div className="form-group mb-3">
+                  <label htmlFor="phone" className="form-label">
+                    Phone Number
+                  </label>
+
+                  <input
+                    type="number"
+                    id="phone"
+                    name="phone"
+                    className="form-control"
+                    value={formData.phone}
+                    onChange={handleChnage}
+                  />
+                </div>
+                <div className="form-group mb-3">
+                  <label htmlFor="address" className="form-label">
+                    Address
+                  </label>
+
+                  <textarea
+                    id="address"
+                    name="address"
+                    className="form-control"
+                    value={formData.address}
+                    rows={2}
+                    onChange={handleChnage}
+                  />
+                </div>
+                <div className="form-group mb-3">
+                  <label htmlFor="imageUrl" className="form-label">
+                    Image Url
+                  </label>
+
+                  <input
+                    type="text"
+                    id="imageUrl"
+                    name="imageUrl"
+                    className="form-control"
+                    value={formData.imageUrl}
+                    rows={1}
+                    onChange={handleChnage}
+                  />
+                </div>
+                <div className="form-group mb-3">
+                  <label htmlFor="about" className="form-label">
+                    About
+                  </label>
+
+                  <textarea
+                    id="about"
+                    name="about"
+                    className="form-control"
+                    value={formData.about}
+                    rows={2}
+                    onChange={handleChnage}
+                  />
+                </div>
+                <div className="modal-footer">
+                  <button
+                    className="btn btn-secondary"
+                    onClick={() => setShowEditModal(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn"
+                    onClick={handleEditSave}
+                    style={{
+                      background: "#ffbe33",
+                      color: "#000000",
+                    }}
+                  >
+                    {loading ? "Loading..." : "Save Changes"}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         </div>

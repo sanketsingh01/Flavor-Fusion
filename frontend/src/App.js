@@ -1,4 +1,4 @@
-import { Route, Routes } from "react-router-dom";
+import { Route, Routes, Navigate } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 
 import Layout from "./components/layout/Layout";
@@ -11,7 +11,10 @@ import LoginPage from "./components/LoginPage";
 import Booking from "./components/Booking";
 import Profile from "./components/Profile";
 
+import LoginProtectedRoute from "./components/utlis/LoginProtectedRoute.js";
+
 function App() {
+  const user = JSON.parse(localStorage.getItem("user"));
   return (
     <>
       {" "}
@@ -24,7 +27,14 @@ function App() {
           <Route path="/Signup" element={<Signup />}></Route>
           <Route path="/login" element={<LoginPage />}></Route>
           <Route path="/bookTable" element={<Booking />}></Route>
-          <Route path="/profile" element={<Profile />}></Route>
+          <Route
+            path="/profile"
+            element={
+              <LoginProtectedRoute>
+                <Profile />
+              </LoginProtectedRoute>
+            }
+          ></Route>
         </Route>
 
         <Route path="*" element={<NotFoundPage />}></Route>

@@ -1,25 +1,80 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { toast } from "react-hot-toast";
+import axios from "axios";
 
 const Signup = () => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
-    phoneno: "",
+    phone: "",
+    address: "",
+    imageUrl: "",
   });
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState(null);
+  const [successMessage, setSuccessMessage] = useState(null);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setSubmitted(true);
-    navigate("/Menu", { replace: true });
+    // setSubmitted(true);
+    // console.log(formData);
+    // submitContact(formData);
+    // navigate("/Menu", { replace: true });
+
+    const payload = {
+      name: formData.name,
+      email: formData.email,
+      password: formData.password,
+      phone: formData.phone,
+      address: formData.address,
+      imageUrl: formData.imageUrl,
+    };
+
+    try {
+      setErrorMessage("");
+      setLoading(true);
+      const response = await axios.post(
+        "http://localhost:3000/user/signup",
+        payload
+      );
+      console.log("SIgnUp data: ", response.data);
+      setSuccessMessage(
+        response.data.message || "User registered successfully"
+      );
+    } catch (error) {
+      console.log("Error while signup: ", error);
+      setErrorMessage("Failed to signup user");
+    } finally {
+      setLoading(false);
+    }
   };
+
+  useEffect(() => {
+    if (successMessage) {
+      toast.success(successMessage || "SignUp Successfully", {
+        position: "top-center",
+        autoClose: 2000,
+      });
+      setSubmitted(true);
+
+      navigate("/login", { replace: true });
+    }
+
+    if (errorMessage) {
+      toast.error(errorMessage, {
+        position: "top-center",
+        autoClose: 3000,
+      });
+    }
+  }, [successMessage, errorMessage, navigate]);
 
   return (
     <section
@@ -32,17 +87,17 @@ const Signup = () => {
         backgroundRepeat: "no-repeat",
       }}
     >
-      <div className="container py-5">
+      <div className="container py-5 w-100">
         <div className="row justify-content-center align-items-center">
-          <div className="col-lg-6 col-md-8">
+          <div className="col-12 col-sm-10 col-md-8 col-lg-6">
             <div
-              className="card rounded-4 shadow-lg"
+              className="card rounded-4 shadow-lg w-100"
               style={{
                 backgroundColor: "rgba(255, 255, 255, 0.9)",
                 backdropFilter: "blur(5px)",
               }}
             >
-              <div className="card-body p-5">
+              <div className="card-body p-4">
                 <h2
                   className="text-center mb-2"
                   style={{ color: "#23282b", fontWeight: 700 }}
@@ -86,7 +141,7 @@ const Signup = () => {
                       required
                     />
                   </div>
-                  <div className="form-group mb-4">
+                  <div className="form-group mb-3">
                     <label htmlFor="password" className="form-label">
                       Password
                     </label>
@@ -100,16 +155,44 @@ const Signup = () => {
                       required
                     />
                   </div>
-                  <div className="form-group mb-4">
-                    <label htmlFor="phoneno" className="form-label">
+                  <div className="form-group mb-3">
+                    <label htmlFor="phone" className="form-label">
                       Phone Number
                     </label>
                     <input
-                      type="text"
-                      id="phoneno"
-                      name="phoneno"
+                      type="number"
+                      id="phone"
+                      name="phone"
                       className="form-control"
-                      value={formData.phoneno}
+                      value={formData.phone}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
+                  <div className="form-group mb-3">
+                    <label htmlFor="address" className="form-label">
+                      Your Address
+                    </label>
+                    <textarea
+                      id="address"
+                      name="address"
+                      className="form-control"
+                      value={formData.address}
+                      onChange={handleChange}
+                      required
+                      rows={1}
+                    />
+                  </div>
+                  <div className="form-group mb-4">
+                    <label htmlFor="imageUrl" className="form-label">
+                      Profile Image URL
+                    </label>
+                    <input
+                      type="text"
+                      id="imageUrl"
+                      name="imageUrl"
+                      className="form-control"
+                      value={formData.imageUrl}
                       onChange={handleChange}
                       required
                     />
@@ -123,7 +206,7 @@ const Signup = () => {
                       fontWeight: "bold",
                     }}
                   >
-                    Sign Up
+                    {loading ? "Loading..." : "Sign Up"}
                   </button>
                 </form>
                 <div className="text-center mt-3">

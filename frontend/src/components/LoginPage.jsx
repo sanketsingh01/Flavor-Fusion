@@ -1,5 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { toast } from "react-hot-toast";
+import axios from "axios";
 
 const LoginPage = () => {
   const [formData, setFormData] = useState({
@@ -7,6 +9,9 @@ const LoginPage = () => {
     password: "",
   });
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState(null);
+  const [errorMessage, setErrorMessage] = useState(null);
 
   const navigate = useNavigate();
 
@@ -14,12 +19,56 @@ const LoginPage = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log(formData);
-    setSubmitted(true);
-    navigate("/Menu", { replace: true });
+    // console.log(formData);
+    // setSubmitted(true);
+    // submitForm(formData);
+    // navigate("/Menu", { replace: true });
+
+    const payload = {
+      email: formData.email,
+      password: formData.password,
+    };
+
+    try {
+      setErrorMessage(null);
+      setSuccessMessage(null);
+      setLoading(true);
+
+      const response = await axios.post(
+        "http://localhost:3000/user/login",
+        payload
+      );
+      console.log("Login Data: ", response.data);
+      setSuccessMessage(response.data.message || "User LoggedIn Successfully");
+
+      localStorage.setItem("user", JSON.stringify(response.data.body));
+    } catch (error) {
+      console.log("Error while login: ", error);
+      setErrorMessage("Failed to signup user");
+    } finally {
+      setLoading(false);
+    }
   };
+
+  useEffect(() => {
+    if (successMessage) {
+      toast.success(successMessage || "LoggedIn Successfully", {
+        position: "top-center",
+        autoClose: 2000,
+      });
+      setSubmitted(true);
+      navigate("/", { replace: true }); // Navigate to Home
+    }
+
+    if (errorMessage) {
+      toast.error(errorMessage, {
+        position: "top-center",
+        autoClose: 3000,
+      });
+    }
+  }, [successMessage, errorMessage, navigate]);
 
   return (
     <section
@@ -95,7 +144,7 @@ const LoginPage = () => {
                       fontWeight: "bold",
                     }}
                   >
-                    Login
+                    {loading ? "Loading..." : "Log In"}
                   </button>
                 </form>
                 <div className="text-center mt-3">

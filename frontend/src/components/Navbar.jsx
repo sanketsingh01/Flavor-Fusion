@@ -123,7 +123,7 @@ const Navbar = () => {
                 </div>
               ) : (
                 <div className="user_option">
-                  <Link to="/Signup" className="user_link">
+                  <Link to="/profile" className="user_link">
                     <User2Icon className="fa fa-user" aria-hidden="true" />
                   </Link>
                   <button
@@ -135,14 +135,14 @@ const Navbar = () => {
                   >
                     <ShoppingCartIcon className="text-dark" />
                   </button>
-                  <form className="form-inline">
+                  {/* <form className="form-inline">
                     <button
                       className="btn my-2 my-sm-0 nav_search-btn text-dark"
                       type="submit"
                     >
                       <SearchIcon className="fa fa-search" aria-hidden="true" />
                     </button>
-                  </form>
+                  </form> */}
                   <Link to="/Menu" className="order_online">
                     Order Online
                   </Link>

@@ -35,7 +35,7 @@ export const signup = async (req, res) => {
     return res.status(201).json({
       status: 201,
       success: true,
-      message: "USer registered successfully",
+      message: "User registered successfully",
       body: user,
     });
   } catch (error) {

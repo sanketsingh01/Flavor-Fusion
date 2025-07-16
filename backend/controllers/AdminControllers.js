@@ -58,7 +58,7 @@ export const updateProduct = async (req, res) => {
       { new: true }
     );
 
-    if (!updateProduct) {
+    if (!updatedProduct) {
       return res.status(400).json({
         status: 400,
         success: false,
