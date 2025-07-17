@@ -1,77 +1,50 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { SearchIcon } from "lucide-react";
+import axios from "axios";
+import { toast } from "react-hot-toast";
 
 function Products() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
-  const [products, setProducts] = useState([
-    {
-      id: 1,
-      name: "Margherita Pizza",
-      price: "$12.99",
-      category: "Fast Food",
-      image:
-        "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600",
-      description:
-        "Classic Italian pizza with fresh tomatoes, mozzarella cheese, and basil leaves",
-      rating: 4.5,
-      reviews: 128,
-      ingredients: ["Tomato Sauce", "Mozzarella", "Fresh Basil", "Olive Oil"],
-    },
-    {
-      id: 2,
-      name: "Chicken Burger",
-      price: "$8.99",
-      category: "Fast Food",
-      image:
-        "https://plus.unsplash.com/premium_photo-1675864532183-8f37e8834db5?w=600",
-      description:
-        "Juicy grilled chicken breast with lettuce, tomato, and special sauce",
-      rating: 4.2,
-      reviews: 89,
-      ingredients: [
-        "Chicken Breast",
-        "Lettuce",
-        "Tomato",
-        "Special Sauce",
-        "Bun",
-      ],
-    },
-    {
-      id: 3,
-      name: "Caesar Salad",
-      price: "$7.99",
-      category: "Healthy",
-      image:
-        "https://images.unsplash.com/photo-1564185722618-ae3ffa1ac5aa?w=600",
-      description:
-        "Fresh romaine lettuce with parmesan cheese, croutons, and caesar dressing",
-      rating: 4.0,
-      reviews: 45,
-      ingredients: [
-        "Romaine Lettuce",
-        "Parmesan",
-        "Croutons",
-        "Caesar Dressing",
-      ],
-    },
-    {
-      id: 4,
-      name: "Chocolate Cake",
-      price: "$5.99",
-      category: "Dessert",
-      image:
-        "https://images.unsplash.com/photo-1605807646983-377bc5a76493?w=600",
-      description: "Rich and moist chocolate cake with chocolate frosting",
-      rating: 4.8,
-      reviews: 67,
-      ingredients: ["Chocolate", "Flour", "Sugar", "Eggs", "Butter"],
-    },
-  ]);
+  const [products, setProducts] = useState([]);
 
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [editData, setEditData] = useState({});
   const [showModal, setShowModal] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [productToDelete, setProductToDelete] = useState(null);
+
+  useEffect(() => {
+    const fetchproducts = async () => {
+      try {
+        const resposnse = await axios.get(
+          "http://localhost:3000/admin/allProducts"
+        );
+        const products = resposnse.data.body || [];
+
+        const formatted = products.map((product) => ({
+          id: product._id,
+          name: product.name,
+          price: product.price,
+          category: product.category,
+          image: product.imageUrl,
+          description: product.description,
+          rating: 4.2,
+          reviews: 60,
+          ingredients: product.ingredients,
+        }));
+
+        setProducts(formatted);
+      } catch (error) {
+        console.log("Error while fetching all the Products: ", error);
+        setProducts([]);
+      }
+    };
+
+    fetchproducts();
+  }, []);
 
   const categories = ["All", ...new Set(products.map((p) => p.category))];
 
@@ -90,17 +63,102 @@ function Products() {
     setShowModal(true);
   };
 
+  const handleDeleteClick = (product) => {
+    setProductToDelete(product);
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!productToDelete) return;
+
+    try {
+      setLoading(true);
+      await axios.delete(
+        `http://localhost:3000/admin/deleteProduct/${productToDelete.id}`
+      );
+      setProducts((prev) => prev.filter((p) => p.id !== productToDelete.id));
+      toast.success("Product deleted successfully");
+    } catch (error) {
+      console.error("Error while deleting product:", error);
+      toast.error("Failed to delete product");
+    } finally {
+      setShowDeleteModal(false);
+      setProductToDelete(null);
+      setLoading(false);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteModal(false);
+    setProductToDelete(null);
+  };
+
   const handleEditChange = (e) => {
     const { name, value } = e.target;
     setEditData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSaveEdit = () => {
-    setProducts((prev) =>
-      prev.map((p) => (p.id === editData.id ? editData : p))
-    );
-    setShowModal(false);
-    setSelectedProduct(null);
+  const handleSaveEdit = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.put(
+        `http://localhost:3000/admin/updateProduct/${editData.id}`,
+        editData
+      );
+
+      const updatedProduct = response.data.body;
+
+      setProducts((prev) =>
+        prev.map((product) =>
+          product.id === updatedProduct._id
+            ? {
+                id: updatedProduct._id,
+                name: updatedProduct.name,
+                price: updatedProduct.price,
+                category: updatedProduct.category,
+                image: updatedProduct.imageUrl,
+                rating: updatedProduct.rating || 4.2,
+                reviews: updatedProduct.reviews || 60,
+                description: updatedProduct.description,
+                ingredients: updatedProduct.ingredients,
+              }
+            : product
+        )
+      );
+
+      setSelectedProduct({
+        id: updatedProduct._id,
+        name: updatedProduct.name,
+        price: updatedProduct.price,
+        category: updatedProduct.category,
+        image: updatedProduct.imageUrl,
+        rating: updatedProduct.rating || 4.2,
+        reviews: updatedProduct.reviews || 60,
+        description: updatedProduct.description,
+        ingredients: updatedProduct.ingredients,
+      });
+
+      setEditData({
+        id: updatedProduct._id,
+        name: updatedProduct.name,
+        price: updatedProduct.price,
+        category: updatedProduct.category,
+        image: updatedProduct.imageUrl,
+        rating: updatedProduct.rating || 4.2,
+        reviews: updatedProduct.reviews || 60,
+        description: updatedProduct.description,
+        ingredients: updatedProduct.ingredients,
+      });
+
+      setShowModal(false);
+      setSelectedProduct(null);
+      toast.success("Product Details updated Successfully");
+    } catch (error) {
+      console.log("Error while updating the product data: ", error);
+      toast.error("Error while updating the Product");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCloseModal = () => {
@@ -230,7 +288,10 @@ function Products() {
                       >
                         <i className="bi bi-pencil me-2"></i>Edit Product
                       </button>
-                      <button className="btn btn-outline-danger btn-sm">
+                      <button
+                        className="btn btn-outline-danger btn-sm"
+                        onClick={() => handleDeleteClick(product)}
+                      >
                         <i className="bi bi-trash me-1"></i>Delete
                       </button>
                     </div>
@@ -328,7 +389,49 @@ function Products() {
                   Cancel
                 </button>
                 <button className="btn btn-success" onClick={handleSaveEdit}>
-                  Save Changes
+                  {loading ? "Loading..." : "Save Changes"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* delete Modal */}
+      {showDeleteModal && productToDelete && (
+        <div
+          className="modal fade show d-block"
+          tabIndex="-1"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+        >
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header bg-danger text-white">
+                <h5 className="modal-title">Confirm Deletion</h5>
+                <button
+                  type="button"
+                  className="btn-close btn-close-white"
+                  onClick={handleCancelDelete}
+                ></button>
+              </div>
+              <div className="modal-body">
+                <p>
+                  Are you sure you want to delete the product{" "}
+                  <strong>{productToDelete.name}</strong>?
+                </p>
+              </div>
+              <div className="modal-footer">
+                <button
+                  className="btn btn-secondary"
+                  onClick={handleCancelDelete}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="btn btn-danger"
+                  onClick={handleConfirmDelete}
+                >
+                  {loading ? "Deleting..." : "Delete"}
                 </button>
               </div>
             </div>

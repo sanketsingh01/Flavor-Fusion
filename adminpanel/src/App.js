@@ -7,6 +7,8 @@ import Products from "./components/Products";
 import Sidebar from "./components/Sidebar";
 import AddProduct from "./components/AddProducts";
 
+import { Toaster } from "react-hot-toast";
+
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("token"));
 
@@ -21,6 +23,7 @@ function App() {
 
   return (
     <>
+      <Toaster />
       {isLoggedIn && <Sidebar />}
       <Routes>
         <Route

@@ -1,5 +1,7 @@
+import axios from "axios";
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "react-hot-toast";
 
 function AddProduct() {
   const {
@@ -21,21 +23,21 @@ function AddProduct() {
   }, [watchImageUrl]);
 
   const onSubmit = async (data) => {
-    setIsSubmitting(true);
+    try {
+      setIsSubmitting(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      alert(
-        `Product added successfully!\n\nDetails:\n${JSON.stringify(
-          data,
-          null,
-          2
-        )}`
+      const response = await axios.post(
+        "http://localhost:3000/admin/addProduct",
+        data
       );
-      reset();
-      setImagePreview("");
+      console.log("Added Product: ", response.data);
+      toast.success("Product added Successfully");
+    } catch (error) {
+      console.log("Error while adding Product: ", error);
+      toast.error("Failed to add New Product");
+    } finally {
       setIsSubmitting(false);
-    }, 1000);
+    }
   };
 
   const categories = [

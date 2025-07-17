@@ -5,12 +5,13 @@ import cors from "cors";
 
 import userRoutes from "./routes/userRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
+import cartRoutes from "./routes/cartRoutes.js";
 
 const App = express();
 
 App.use(
   cors({
-    origin: "http://localhost:3001",
+    origin: ["http://localhost:3001", "http://localhost:3002"],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -22,6 +23,7 @@ DbConnect();
 App.use(fileUpload());
 App.use("/user", userRoutes);
 App.use("/admin", adminRoutes);
+App.use("/cart", cartRoutes);
 
 const Port = 3000;
 App.listen(Port, () => {

@@ -1,5 +1,6 @@
 import express from "express";
 import {
+  addToCart,
   allUsers,
   deleteUser,
   login,
@@ -14,5 +15,6 @@ userRoutes.post("/login", login);
 userRoutes.get("/allUsers", allUsers);
 userRoutes.put("/updateUser/:id", updateUser);
 userRoutes.delete("/deleteUser/:id", deleteUser);
+userRoutes.put("/addToCart/:id", addToCart);
 
 export default userRoutes;

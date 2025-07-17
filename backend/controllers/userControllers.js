@@ -193,3 +193,47 @@ export const deleteUser = async (req, res) => {
     });
   }
 };
+
+export const addToCart = async (req, res) => {
+  const userId = req.params.id;
+  const { productId } = req.body;
+
+  try {
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(400).json({
+        status: 400,
+        success: false,
+        message: "User Not Found",
+      });
+    }
+
+    const ItemIndex = user.cart.findIndex(
+      (item) => item.productId.toString() === productId
+    );
+
+    if (ItemIndex > -1) {
+      user.cart[ItemIndex].quantity += 1;
+    } else {
+      user.cart.push({ productId, quantity: 1 });
+    }
+
+    await user.save();
+
+    return res.status(200).json({
+      status: 200,
+      success: true,
+      message: "Item added to cart Successfully",
+      body: user,
+    });
+  } catch (error) {
+    console.log("Error while adding itenn to cart: ", error);
+    return res.status(400).json({
+      status: 400,
+      success: false,
+      message: "Error in adding item to cart",
+      body: error,
+    });
+  }
+};

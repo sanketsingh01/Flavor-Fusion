@@ -1,43 +1,38 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 
 function Customers() {
-  const [customers, setCustomers] = useState([
-    {
-      id: 1,
-      image:
-        "https://yt3.googleusercontent.com/MI1A0hpMsLtlxCvHcAojzlqbsKg8s4Hr0fAXBTjGvJcFL2EWOzPPG04t_YfnKsKD4hEz7L05=s900-c-k-c0x00ffffff-no-rj",
-      name: "John Doe",
-      email: "john@example.com",
-      phone: "111-222-3333",
-      address: "123 Main St, New York, NY 10001",
-      joinDate: "2023-01-15",
-      gender: "Male",
-    },
-    {
-      id: 2,
-      image:
-        "https://yt3.googleusercontent.com/MI1A0hpMsLtlxCvHcAojzlqbsKg8s4Hr0fAXBTjGvJcFL2EWOzPPG04t_YfnKsKD4hEz7L05=s900-c-k-c0x00ffffff-no-rj",
-      name: "Jane Smith",
-      email: "jane@example.com",
-      phone: "444-555-6666",
-      address: "456 Oak Ave, Los Angeles, CA 90210",
-      joinDate: "2023-03-22",
-      gender: "Female",
-    },
-    {
-      id: 3,
-      image:
-        "https://yt3.googleusercontent.com/MI1A0hpMsLtlxCvHcAojzlqbsKg8s4Hr0fAXBTjGvJcFL2EWOzPPG04t_YfnKsKD4hEz7L05=s900-c-k-c0x00ffffff-no-rj",
-      name: "Mike Johnson",
-      email: "mike@example.com",
-      phone: "777-888-9999",
-      address: "789 Pine St, Chicago, IL 60601",
-      joinDate: "2023-02-10",
-      gender: "Male",
-    },
-  ]);
+  const [customers, setCustomers] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const [searchQuery, setSearchQuery] = useState(""); // 🔍 Search related
+  useEffect(() => {
+    const fetchCustomers = async () => {
+      try {
+        const res = await axios.get("http://localhost:3000/user/allUsers");
+        const users = res?.data?.body || [];
+
+        const formatted = users.map((user) => ({
+          id: user._id,
+          image: user.imageUrl,
+          name: user.name,
+          email: user.email,
+          phone: user.phone,
+          address: user.address,
+          joinDate: user.createdAt,
+          gender: user.gender || "Male",
+        }));
+
+        setCustomers(formatted);
+      } catch (error) {
+        console.error("Error while fetching all users:", error);
+        setCustomers([]); // fallback
+      }
+    };
+
+    fetchCustomers();
+  }, []);
+
+  // const [searchQuery, setSearchQuery] = useState(""); // 🔍 Search related
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -77,13 +72,58 @@ function Customers() {
     setEditData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSave = () => {
-    const updatedCustomers = customers.map((cust) =>
-      cust.id === editData.id ? { ...editData } : cust
-    );
-    setCustomers(updatedCustomers);
-    setSelectedCustomer(editData);
-    setIsEditing(false);
+  const handleSave = async () => {
+    try {
+      const response = await axios.put(
+        `http://localhost:3000/user/updateUser/${editData.id}`,
+        editData
+      );
+
+      const updatedUser = response.data.body;
+
+      setCustomers((prev) =>
+        prev.map((cust) =>
+          cust.id === updatedUser._id
+            ? {
+                id: updatedUser._id,
+                image: updatedUser.imageUrl,
+                name: updatedUser.name,
+                email: updatedUser.email,
+                phone: updatedUser.phone,
+                address: updatedUser.address,
+                joinDate: updatedUser.createdAt,
+                gender: updatedUser.gender || "Male",
+              }
+            : cust
+        )
+      );
+
+      setSelectedCustomer({
+        id: updatedUser._id,
+        image: updatedUser.imageUrl,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        phone: updatedUser.phone,
+        address: updatedUser.address,
+        joinDate: updatedUser.createdAt,
+        gender: updatedUser.gender || "Male",
+      });
+
+      setEditData({
+        id: updatedUser._id,
+        image: updatedUser.imageUrl,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        phone: updatedUser.phone,
+        address: updatedUser.address,
+        joinDate: updatedUser.createdAt,
+        gender: updatedUser.gender || "Male",
+      });
+
+      setIsEditing(false);
+    } catch (error) {
+      console.log("Error while updating user: ", error);
+    }
   };
 
   return (
