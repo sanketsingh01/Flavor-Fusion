@@ -48,6 +48,7 @@ function AddProduct() {
     "Appetizers",
     "Main Course",
     "Snacks",
+    "Dessert",
   ];
 
   return (

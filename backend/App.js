@@ -6,6 +6,7 @@ import cors from "cors";
 import userRoutes from "./routes/userRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import cartRoutes from "./routes/cartRoutes.js";
+import wishlistRoutes from "./routes/wishlistRoutes.js";
 
 const App = express();
 
@@ -24,6 +25,7 @@ App.use(fileUpload());
 App.use("/user", userRoutes);
 App.use("/admin", adminRoutes);
 App.use("/cart", cartRoutes);
+App.use("/wishlist", wishlistRoutes);
 
 const Port = 3000;
 App.listen(Port, () => {

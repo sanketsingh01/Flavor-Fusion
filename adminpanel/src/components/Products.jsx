@@ -101,9 +101,15 @@ function Products() {
   const handleSaveEdit = async () => {
     try {
       setLoading(true);
+
+      const payload = {
+        ...editData,
+        imageUrl: editData.image, // Map 'image' to 'imageUrl'
+      };
+
       const response = await axios.put(
         `http://localhost:3000/admin/updateProduct/${editData.id}`,
-        editData
+        payload
       );
 
       const updatedProduct = response.data.body;
@@ -125,30 +131,6 @@ function Products() {
             : product
         )
       );
-
-      setSelectedProduct({
-        id: updatedProduct._id,
-        name: updatedProduct.name,
-        price: updatedProduct.price,
-        category: updatedProduct.category,
-        image: updatedProduct.imageUrl,
-        rating: updatedProduct.rating || 4.2,
-        reviews: updatedProduct.reviews || 60,
-        description: updatedProduct.description,
-        ingredients: updatedProduct.ingredients,
-      });
-
-      setEditData({
-        id: updatedProduct._id,
-        name: updatedProduct.name,
-        price: updatedProduct.price,
-        category: updatedProduct.category,
-        image: updatedProduct.imageUrl,
-        rating: updatedProduct.rating || 4.2,
-        reviews: updatedProduct.reviews || 60,
-        description: updatedProduct.description,
-        ingredients: updatedProduct.ingredients,
-      });
 
       setShowModal(false);
       setSelectedProduct(null);
@@ -252,7 +234,7 @@ function Products() {
                     <h5 className="card-title text-dark mb-0">
                       {product.name}
                     </h5>
-                    <h4 className="text-success mb-0">{product.price}</h4>
+                    <h4 className="text-success mb-0">$ {product.price}</h4>
                   </div>
 
                   <div className="d-flex align-items-center mb-2">

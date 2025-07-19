@@ -41,7 +41,10 @@ const LoginPage = () => {
         payload
       );
       console.log("Login Data: ", response.data);
-      setSuccessMessage(response.data.message || "User LoggedIn Successfully");
+      setSuccessMessage(
+        `${response.data.message}: ${response.data.body.name}` ||
+          `User LoggedIn Successfully: ${response.body.data.name}`
+      );
 
       localStorage.setItem("user", JSON.stringify(response.data.body));
     } catch (error) {

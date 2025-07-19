@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { ShoppingCart } from "lucide-react";
+import { ShoppingCart, Heart, HeartIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import axios from "axios";
@@ -7,6 +7,22 @@ import axios from "axios";
 const Menu = () => {
   const [filter, setFilter] = useState("all");
   const [menuItems, setMenuItems] = useState([]);
+  const [wishlist, setWishlist] = useState([]);
+
+  const user = JSON.parse(localStorage.getItem("user"));
+
+  // Fetch wishlist items for the logged-in user
+  const fetchWishlist = async () => {
+    if (!user?._id) return;
+    try {
+      const res = await axios.get(`http://localhost:3000/wishlist/${user._id}`);
+      const wishlistProductIds =
+        res.data.body?.wishlist?.map((item) => item.productId) || [];
+      setWishlist(wishlistProductIds);
+    } catch (error) {
+      console.error("Error fetching wishlist:", error);
+    }
+  };
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -14,7 +30,6 @@ const Menu = () => {
         const response = await axios.get(
           "http://localhost:3000/admin/allProducts"
         );
-
         const products = response.data.body || [];
 
         const formatted = products.map((product) => ({
@@ -33,6 +48,7 @@ const Menu = () => {
     };
 
     fetchProducts();
+    fetchWishlist();
   }, []);
 
   const filteredItems =
@@ -44,49 +60,78 @@ const Menu = () => {
             item.category.toLowerCase() === filter.toLowerCase()
         );
 
-  const handleclick = async (productId) => {
-    const user = JSON.parse(localStorage.getItem("user"));
-
+  const handleAddToCart = async (productId) => {
     try {
       const response = await axios.put(
         `http://localhost:3000/user/addToCart/${user._id}`,
         { productId }
       );
-
-      console.log("Added to cart: ", response.data.body);
       localStorage.setItem("user", JSON.stringify(response.data.body));
-      toast.success("Item Added to cart Successfully");
+      toast.success("Item added to cart!");
     } catch (error) {
-      console.log("Error while adding to Cart: ", error);
+      console.error("Error while adding to Cart: ", error);
       toast.error("Error while adding to cart");
     }
   };
 
-  return (
-    <>
-      <section className="food_section layout_padding-bottom">
-        <div className="container">
-          <div className="heading_container heading_center">
-            <h2>Our Menu</h2>
-          </div>
-          <ul className="filters_menu">
-            {["all", "burger", "pizza", "pasta", "fries", "fast food"].map(
-              (cat) => (
-                <li
-                  key={cat}
-                  className={filter === cat ? "active" : ""}
-                  style={{ cursor: "pointer" }}
-                  onClick={() => setFilter(cat)}
-                >
-                  {cat.charAt(0).toUpperCase() + cat.slice(1)}
-                </li>
-              )
-            )}
-          </ul>
+  const handleAddToWishlist = async (productId) => {
+    try {
+      const res = await axios.post(
+        `http://localhost:3000/wishlist/addToWishlist/${user._id}`,
+        { productId }
+      );
+      toast.success("Added to wishlist");
+      // fetchWishlist();
+    } catch (err) {
+      console.error("Error adding to wishlist:", err);
 
-          <div className="filters-content">
-            <div className="row grid">
-              {filteredItems.map((item) => (
+      const errorMessage =
+        err?.response?.data?.message || "Error adding to wishlist";
+
+      toast.error(errorMessage);
+    }
+  };
+
+  const isInWishlist = (productId) => wishlist.includes(productId);
+
+  return (
+    <section className="food_section layout_padding-bottom">
+      <div className="container">
+        <div className="heading_container heading_center">
+          <h2 style={{ fontSize: "4rem" }}>Our Menu</h2>
+        </div>
+        <ul className="filters_menu">
+          {[
+            "all",
+            "fast food",
+            "healthy",
+            "beverages",
+            "appertizers",
+            "main course",
+            "snacks",
+            "dessert",
+          ].map((cat) => (
+            <li
+              key={cat}
+              className={filter === cat ? "active" : ""}
+              style={{ cursor: "pointer" }}
+              onClick={() => setFilter(cat)}
+            >
+              {cat.charAt(0).toUpperCase() + cat.slice(1)}
+            </li>
+          ))}
+        </ul>
+
+        <div className="filters-content">
+          <div className="row grid">
+            {filteredItems.length === 0 ? (
+              <div className="col-12 text-center">
+                <h4 style={{ marginTop: "2rem" }}>
+                  Items will be coming soon 🍽️
+                </h4>
+              </div>
+            ) : (
+              filteredItems.map((item) => (
                 <div key={item.id} className="col-sm-6 col-lg-4">
                   <div className="box">
                     <div>
@@ -102,25 +147,31 @@ const Menu = () => {
                       <div className="detail-box">
                         <h5>{item.name}</h5>
                         <p>{item.description}</p>
-                        <div className="options">
+                        <div className="options d-flex justify-content-between align-items-center">
                           <h6>${item.price}</h6>
-                          <Link onClick={() => handleclick(item.id)}>
-                            <ShoppingCart className="h-auto w-auto text-light" />
-                          </Link>
+                          <div className="d-flex gap-3 align-items-center">
+                            <Link onClick={() => handleAddToCart(item.id)}>
+                              <ShoppingCart className="text-light" />
+                            </Link>
+                            <Link onClick={() => handleAddToWishlist(item.id)}>
+                              {isInWishlist(item.id) ? (
+                                <Heart fill="red" color="red" />
+                              ) : (
+                                <HeartIcon />
+                              )}
+                            </Link>
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              ))}
-            </div>
+              ))
+            )}
           </div>
-          {/* <div className="btn-box">
-            <a href="">View More</a>
-          </div> */}
         </div>
-      </section>
-    </>
+      </div>
+    </section>
   );
 };
 
