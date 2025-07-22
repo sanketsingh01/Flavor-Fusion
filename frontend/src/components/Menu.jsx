@@ -17,7 +17,7 @@ const Menu = () => {
     try {
       const res = await axios.get(`http://localhost:3000/wishlist/${user._id}`);
       const wishlistProductIds =
-        res.data.body?.wishlist?.map((item) => item.productId) || [];
+        res.data.body?.items?.map((item) => item.productId) || [];
       setWishlist(wishlistProductIds);
     } catch (error) {
       console.error("Error fetching wishlist:", error);
@@ -81,7 +81,7 @@ const Menu = () => {
         { productId }
       );
       toast.success("Added to wishlist");
-      // fetchWishlist();
+      fetchWishlist();
     } catch (err) {
       console.error("Error adding to wishlist:", err);
 
@@ -155,9 +155,9 @@ const Menu = () => {
                             </Link>
                             <Link onClick={() => handleAddToWishlist(item.id)}>
                               {isInWishlist(item.id) ? (
-                                <Heart fill="red" color="red" />
+                                <Heart style={{ fill: "red", stroke: "red" }} />
                               ) : (
-                                <HeartIcon />
+                                <Heart style={{ stroke: "gray" }} />
                               )}
                             </Link>
                           </div>

@@ -19,6 +19,7 @@ App.use(
   })
 );
 App.use(express.json());
+App.use(express.urlencoded({ extended: true }));
 
 DbConnect();
 App.use(fileUpload());

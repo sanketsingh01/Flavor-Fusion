@@ -7,6 +7,8 @@ import {
   Instagram,
   UserCircle2,
   ShoppingBag,
+  Heart,
+  Trash,
 } from "lucide-react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
@@ -38,6 +40,7 @@ const Profile = () => {
   const [activeTab, setActiveTab] = useState("profile");
   const [showEditModal, setShowEditModal] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [wishlistItems, setWishlistItems] = useState([]);
 
   const [formData, setFormData] = useState({
     name: userData.name,
@@ -101,6 +104,47 @@ const Profile = () => {
   const handlePasswordSave = () => {
     console.log("New password", newPassword);
     setShowPasswordModal(false);
+  };
+
+  const fetchWishlist = async () => {
+    try {
+      const res = await axios.get(`http://localhost:3000/wishlist/${user._id}`);
+      const items = res.data.body?.items || [];
+
+      const productPromises = items.map((item) =>
+        axios.get(`http://localhost:3000/admin/getProduct/${item.productId}`)
+      );
+
+      const productResponses = await Promise.all(productPromises);
+
+      const detailedWishlist = productResponses.map((res) => ({
+        id: res.data.body._id,
+        name: res.data.body.name,
+        price: res.data.body.price,
+      }));
+
+      setWishlistItems(detailedWishlist);
+    } catch (err) {
+      console.error("Error fetching wishlist items:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchWishlist();
+  }, []);
+
+  const handleRemoveFromWishlist = async (productId) => {
+    try {
+      const res = await axios.delete(
+        `http://localhost:3000/wishlist/removeFromWishlist/${user._id}`,
+        { data: { productId } }
+      );
+      toast.success("Removed from wishlist");
+      fetchWishlist(); // refresh the wishlist
+    } catch (err) {
+      console.error("Error removing from wishlist: ", err);
+      toast.error("Failed to remove item from wishlist");
+    }
   };
 
   const handleLogout = () => {
@@ -183,6 +227,17 @@ const Profile = () => {
               }}
             >
               <ShoppingBag size={18} /> Orders
+            </button>
+          </li>
+          <li className="nav-item flex-fill" role="presentation">
+            <button
+              className={`nav-link w-100 d-flex align-items-center justify-content-center gap-1 ${
+                activeTab === "wishlist" ? "tab-active" : ""
+              }`}
+              onClick={() => setActiveTab("wishlist")}
+              style={{ color: "#000000" }}
+            >
+              <Heart className="text-danger" size={18} /> Wishlist
             </button>
           </li>
         </ul>
@@ -272,6 +327,35 @@ const Profile = () => {
             </div>
           )}
         </div>
+        {activeTab === "wishlist" && (
+          <div>
+            <h5 className="fw-semibold mb-3">My Wishlist</h5>
+            {wishlistItems.length === 0 ? (
+              <div className="text-muted">Your wishlist is empty.</div>
+            ) : (
+              <ul className="list-group">
+                {wishlistItems.map((item) => (
+                  <li
+                    key={item.id}
+                    className="list-group-item d-flex justify-content-between align-items-center bg-transparent border-0"
+                  >
+                    <div>
+                      <strong>{item.name}</strong>
+                      <br />
+                      <span className="text-muted">${item.price}</span>
+                    </div>
+                    <button
+                      className="btn btn-sm btn-outline-danger"
+                      onClick={() => handleRemoveFromWishlist(item.id)}
+                    >
+                      <Trash size={18} />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Edit Profile Modal */}

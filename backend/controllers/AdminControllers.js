@@ -50,6 +50,45 @@ export const allProducts = async (req, res) => {
   }
 };
 
+export const getProduct = async (req, res) => {
+  const { productId } = req.params;
+
+  if (!productId) {
+    return res.status(400).json({
+      status: 400,
+      success: false,
+      message: "Product id is required",
+    });
+  }
+
+  try {
+    const product = await ProductModel.findById(productId);
+
+    if (!product) {
+      return res.status(400).json({
+        status: 400,
+        success: false,
+        message: "Product Not Found",
+      });
+    }
+
+    return res.status(200).json({
+      status: 200,
+      success: true,
+      message: "Product fetched Successfully",
+      body: product,
+    });
+  } catch (error) {
+    console.log("Error while fetching the Product: ", error);
+    return res.status(400).json({
+      status: 400,
+      success: false,
+      message: "Error while fetching the Product",
+      body: error,
+    });
+  }
+};
+
 export const updateProduct = async (req, res) => {
   try {
     const updatedProduct = await ProductModel.findByIdAndUpdate(
