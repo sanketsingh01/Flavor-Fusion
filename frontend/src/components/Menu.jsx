@@ -68,6 +68,8 @@ const Menu = () => {
       );
       localStorage.setItem("user", JSON.stringify(response.data.body));
       toast.success("Item added to cart!");
+
+      window.dispatchEvent(new Event("cartUpdated"));
     } catch (error) {
       console.error("Error while adding to Cart: ", error);
       toast.error("Error while adding to cart");
