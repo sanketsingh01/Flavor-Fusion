@@ -12,6 +12,38 @@ const cartItemSchema = mongoose.Schema({
   },
 });
 
+const orderItemSchema = mongoose.Schema({
+  productId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "product",
+    required: true,
+  },
+  name: { type: String, required: true, default: "" },
+  quantity: { type: Number, required: true, default: 1 },
+  price: { type: Number, required: true, default: 0 },
+});
+
+const orderSchema = mongoose.Schema({
+  items: {
+    type: [orderItemSchema],
+    required: true,
+    default: [],
+  },
+  totalAmount: {
+    type: Number,
+    required: true,
+    default: 0,
+  },
+  orderAt: {
+    type: Date,
+    default: Date.now,
+  },
+  status: {
+    type: String,
+    default: "Delivered",
+  },
+});
+
 const userSchema = mongoose.Schema(
   {
     name: { type: String, default: "" },
@@ -23,6 +55,11 @@ const userSchema = mongoose.Schema(
 
     cart: {
       type: [cartItemSchema],
+      default: [],
+    },
+
+    history: {
+      type: [orderSchema],
       default: [],
     },
   },

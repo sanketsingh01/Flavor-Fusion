@@ -70,7 +70,7 @@ export default function CartDrawer() {
           (item) => item.productId === product._id
         );
         return {
-          id: product._id,
+          productId: product._id,
           name: product.name,
           price: product.price,
           quantity: cartItem?.quantity || 1,
@@ -120,6 +120,32 @@ export default function CartDrawer() {
     }
   };
 
+  const handlecheckout = async () => {
+    const user = JSON.parse(localStorage.getItem("user"));
+
+    const formattedItems = cartItems.map((item) => ({
+      productId: item.productId || item._id,
+      name: item.name,
+      price: item.price,
+      quantity: item.quantity,
+    }));
+
+    try {
+      const response = await axios.post(
+        `http://localhost:3000/order/storeOrder/${user._id}`,
+        {
+          itemsArray: formattedItems,
+          totalAmount: subtotal,
+        }
+      );
+      localStorage.setItem("user", JSON.stringify(response.data.body));
+      toast.success("Order Placed Successfully");
+    } catch (error) {
+      console.error("Error placing order:", error);
+      toast.error("Order failed");
+    }
+  };
+
   return (
     <div
       className="offcanvas offcanvas-end shadow-sm"
@@ -151,7 +177,7 @@ export default function CartDrawer() {
             <ul className="list-group list-group-flush mb-3">
               {cartItems.map((item) => (
                 <li
-                  key={item.id}
+                  key={item.productId}
                   className="list-group-item d-flex justify-content-between align-items-start"
                   style={{
                     padding: "1rem 0.5rem",
@@ -170,13 +196,13 @@ export default function CartDrawer() {
 
                   <div className="d-flex flex-column align-items-center gap-2">
                     <button
-                      onClick={() => handleIncreaseQuantity(item.id)}
+                      onClick={() => handleIncreaseQuantity(item.productId)}
                       className="btn btn-sm btn-outline-dark p-1 r"
                     >
                       <PlusIcon size={16} />
                     </button>
                     <button
-                      onClick={() => handleDecreaseQuantity(item.id)}
+                      onClick={() => handleDecreaseQuantity(item.productId)}
                       className="btn btn-sm btn-outline-dark p-1"
                     >
                       <MinusIcon size={16} />
@@ -191,7 +217,10 @@ export default function CartDrawer() {
               <span>${subtotal.toFixed(2)}</span>
             </div>
 
-            <button className="btn btn-dark mt-4 w-100 py-2 fw-semibold shadow-sm">
+            <button
+              onClick={handlecheckout}
+              className="btn btn-dark mt-4 w-100 py-2 fw-semibold shadow-sm"
+            >
               Proceed to Checkout
             </button>
           </>

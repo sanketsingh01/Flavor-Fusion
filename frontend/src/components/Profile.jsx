@@ -186,7 +186,7 @@ const Profile = () => {
             <small className="text-muted">{userData.email}</small>
             <br />
             <small className="text-secondary fst-italic">
-              Joined on {userData.createdAt}
+              Joined on {new Date(userData.createdAt).toLocaleString()}
             </small>
           </div>
           <button
@@ -288,41 +288,40 @@ const Profile = () => {
           )}
           {activeTab === "orders" && (
             <div>
-              <h5 className="fw-semibold mb-3">Past Orders</h5>
-              {userData.pastOrders.length > 0 ? (
-                <>
-                  <div className="progress mb-3" style={{ height: "8px" }}>
-                    <div
-                      className="progress-bar bg-success"
-                      role="progressbar"
-                      style={{
-                        width: `${(userData.pastOrders.length / 10) * 100}%`,
-                      }}
-                      aria-valuenow={userData.pastOrders.length}
-                      aria-valuemin="0"
-                      aria-valuemax="10"
-                    ></div>
+              <h5 className="fw-semibold mb-3">Order History</h5>
+              {user.history && user.history.length > 0 ? (
+                user.history.map((order, idx) => (
+                  <div
+                    key={idx}
+                    className="card mb-3 p-3 rounded-4 shadow-sm"
+                    style={{ backgroundColor: "#f9f9f9" }}
+                  >
+                    <h6 className="fw-bold mb-2">Order #{idx + 1}</h6>
+                    <ul className="list-group list-group-flush">
+                      {order.items.map((item, index) => (
+                        <li
+                          key={index}
+                          className="list-group-item bg-transparent border-0 d-flex justify-content-between"
+                        >
+                          <span>
+                            {item.quantity} × {item.name}
+                          </span>
+                          <span className="text-muted">
+                            ${item.price.toFixed(2)}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                    <div className="mt-2 text-end fw-semibold">
+                      Total: ${order.totalAmount.toFixed(2)}
+                    </div>
+                    <div className="text-muted text-end small">
+                      Ordered on: {new Date(order.orderAt).toLocaleString()}
+                    </div>
                   </div>
-                  <div className="list-group">
-                    {userData.pastOrders.map((order) => (
-                      <div
-                        key={order.id}
-                        className="list-group-item d-flex justify-content-between align-items-center bg-transparent border-0"
-                      >
-                        <div>
-                          <strong>{order.item}</strong>
-                          <br />
-                          <small className="text-muted">{order.date}</small>
-                        </div>
-                        <span className="fw-bold text-success">
-                          ${order.price.toFixed(2)}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </>
+                ))
               ) : (
-                <div className="text-muted">No orders yet.</div>
+                <div className="text-muted">No orders found.</div>
               )}
             </div>
           )}

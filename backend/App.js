@@ -7,6 +7,7 @@ import userRoutes from "./routes/userRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import cartRoutes from "./routes/cartRoutes.js";
 import wishlistRoutes from "./routes/wishlistRoutes.js";
+import orderRoutes from "./routes/orderRoutes.js";
 
 const App = express();
 
@@ -27,6 +28,7 @@ App.use("/user", userRoutes);
 App.use("/admin", adminRoutes);
 App.use("/cart", cartRoutes);
 App.use("/wishlist", wishlistRoutes);
+App.use("/order", orderRoutes);
 
 const Port = 3000;
 App.listen(Port, () => {
